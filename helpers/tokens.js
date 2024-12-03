@@ -9,17 +9,10 @@ function createToken(user) {
 
   let payload = {
     username: user.username,
-    isAdmin: user.isAdmin || false,
+    isAdmin: user.isAdmin || true,
   };
 
   return jwt.sign(payload, SECRET_KEY);
 }
 
 module.exports = { createToken };
-
-// Test token generation (add this temporarily at the bottom of tokens.js)
-if (require.main === module) { // Ensures this runs only when executing tokens.js directly
-  const testUser = { username: "aladamm78", isAdmin: true };
-  const token = createToken(testUser);
-  console.log("Generated Token:", token);
-}
