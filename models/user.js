@@ -22,7 +22,6 @@ class User {
    **/
 
   static async authenticate(username, password) {
-    // try to find the user first
     const result = await db.query(
           `SELECT username,
                   password,
@@ -38,16 +37,18 @@ class User {
     const user = result.rows[0];
 
     if (user) {
-      // compare hashed password to a new hash from password
+      console.log("User data from DB:", user); // Debug log
+
       const isValid = await bcrypt.compare(password, user.password);
       if (isValid === true) {
-        delete user.password;
-        return user;
+        delete user.password; // Remove sensitive data
+        return user; // This includes isAdmin
       }
     }
 
     throw new UnauthorizedError("Invalid username/password");
-  }
+}
+
 
   /** Register user with data.
    *
@@ -242,4 +243,4 @@ class User {
 }
 
 
-module.exports = User;
+module.exports = User; 

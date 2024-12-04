@@ -9,10 +9,14 @@ function createToken(user) {
 
   let payload = {
     username: user.username,
-    isAdmin: user.isAdmin || true,
+    roles: user.isAdmin ? [5150] : [0] // Assign roles based on isAdmin
   };
+
+  console.log("Creating token with roles:", payload.roles); // Debug log
 
   return jwt.sign(payload, SECRET_KEY);
 }
+
+
 
 module.exports = { createToken };
