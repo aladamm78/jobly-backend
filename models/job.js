@@ -51,39 +51,43 @@ class Job {
                         j.equity,
                         j.company_handle AS "companyHandle",
                         c.name AS "companyName"
-                 FROM jobs j 
-                   LEFT JOIN companies AS c ON c.handle = j.company_handle`;
+                 FROM jobs j
+                        LEFT JOIN companies AS c ON c.handle = j.company_handle`;
     let whereExpressions = [];
     let queryValues = [];
-
-    // For each possible search term, add to whereExpressions and
-    // queryValues so we can generate the right SQL
-
+  
     if (minSalary !== undefined) {
       queryValues.push(minSalary);
       whereExpressions.push(`salary >= $${queryValues.length}`);
     }
-
+  
     if (hasEquity === true) {
       whereExpressions.push(`equity > 0`);
     }
-
-    if (title !== undefined) {
+  
+    if (title) {
       queryValues.push(`%${title}%`);
-      whereExpressions.push(`title ILIKE $${queryValues.length}`);
+      queryValues.push(`${title}%`);
+      whereExpressions.push(
+        `(j.title ILIKE $${queryValues.length - 1} OR j.title ILIKE $${queryValues.length})`
+      );
+      query += ` WHERE ${whereExpressions.join(" AND ")} ORDER BY CASE WHEN j.title ILIKE $${queryValues.length} THEN 1 ELSE 2 END, j.title`;
+    } else {
+      if (whereExpressions.length > 0) {
+        query += ` WHERE ${whereExpressions.join(" AND ")}`;
+      }
+      query += " ORDER BY j.title";
     }
-
-    if (whereExpressions.length > 0) {
-      query += " WHERE " + whereExpressions.join(" AND ");
+  
+    try {
+      const jobsRes = await db.query(query, queryValues);
+      return jobsRes.rows;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw new Error("Failed to fetch jobs");
     }
-
-    // Finalize query and return results
-
-    query += " ORDER BY title";
-    const jobsRes = await db.query(query, queryValues);
-    return jobsRes.rows;
   }
-
+  
   /** Given a job id, return data about job.
    *
    * Returns { id, title, salary, equity, companyHandle, company }

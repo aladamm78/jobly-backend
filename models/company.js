@@ -63,41 +63,48 @@ class Company {
                  FROM companies`;
     let whereExpressions = [];
     let queryValues = [];
-
+  
     const { minEmployees, maxEmployees, name } = searchFilters;
-
+  
     if (minEmployees > maxEmployees) {
       throw new BadRequestError("Min employees cannot be greater than max");
     }
-
-    // For each possible search term, add to whereExpressions and queryValues so
-    // we can generate the right SQL
-
+  
     if (minEmployees !== undefined) {
       queryValues.push(minEmployees);
       whereExpressions.push(`num_employees >= $${queryValues.length}`);
     }
-
+  
     if (maxEmployees !== undefined) {
       queryValues.push(maxEmployees);
       whereExpressions.push(`num_employees <= $${queryValues.length}`);
     }
-
+  
     if (name) {
       queryValues.push(`%${name}%`);
-      whereExpressions.push(`name ILIKE $${queryValues.length}`);
+      queryValues.push(`${name}%`);
+      whereExpressions.push(
+        `(name ILIKE $${queryValues.length - 1} OR name ILIKE $${queryValues.length})`
+      );
+      query += ` WHERE ${whereExpressions.join(" AND ")} ORDER BY CASE WHEN name ILIKE $${queryValues.length} THEN 1 ELSE 2 END, name`;
+    } else {
+      if (whereExpressions.length > 0) {
+        query += ` WHERE ${whereExpressions.join(" AND ")}`;
+      }
+      query += " ORDER BY name";
     }
-
-    if (whereExpressions.length > 0) {
-      query += " WHERE " + whereExpressions.join(" AND ");
+  
+    try {
+      const companiesRes = await db.query(query, queryValues);
+      return companiesRes.rows;
+    } catch (err) {
+      console.error("Database query error:", err);
+      throw new Error("Failed to fetch companies");
     }
-
-    // Finalize query and return results
-
-    query += " ORDER BY name";
-    const companiesRes = await db.query(query, queryValues);
-    return companiesRes.rows;
   }
+  
+  
+  
 
   /** Given a company handle, return data about company.
    *
