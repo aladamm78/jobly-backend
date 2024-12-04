@@ -31,12 +31,15 @@ function authenticateJWT(req, res, next) {
   }
 }
 
+
+
 /** Middleware to use when they must be logged in.
  *
  * If not, raises Unauthorized.
  */
-
 function ensureLoggedIn(req, res, next) {
+  console.log("ensureLoggedIn triggered");
+  console.log("res.locals.user:", res.locals.user);
   if (!req.user) throw new UnauthorizedError();
   next();
 }

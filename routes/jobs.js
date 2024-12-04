@@ -1,4 +1,5 @@
 "use strict";
+const { ensureLoggedIn } = require("../middleware/auth");
 
 /** Routes for jobs. */
 
@@ -121,6 +122,31 @@ router.delete("/:id", ensureAdmin, async function (req, res, next) {
   try {
     await Job.remove(req.params.id);
     return res.json({ deleted: +req.params.id });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/** POST /[id]/apply { username } => { applied: jobId }
+ *
+ * Adds an application for the given job.
+ *
+ * Authorization required: logged-in user
+ */
+router.post("/:id/apply", ensureLoggedIn, async function (req, res, next) {
+  try {
+    const jobId = req.params.id;
+    const username = res.locals.user.username; // Get from JWT
+
+    // Insert application record
+    await db.query(
+      `INSERT INTO applications (username, job_id)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [username, jobId]
+    );
+
+    return res.json({ applied: jobId });
   } catch (err) {
     return next(err);
   }
