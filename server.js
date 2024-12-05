@@ -6,7 +6,7 @@ const cors = require('cors');
 
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow requests only from the frontend
+  origin: 'https://jobly-frontend-u8ms.onrender.com', // Allow requests only from the frontend
   credentials: true,              // Allow credentials (cookies, authorization headers, etc.)
 }));
 
