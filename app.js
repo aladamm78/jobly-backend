@@ -19,7 +19,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow requests from the frontend
+  origin: 'https://jobly-frontend-u8ms.onrender.com', // Allow requests from the frontend
   credentials: true,              // Allow cookies and other credentials
 }));
 
